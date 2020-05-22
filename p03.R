@@ -94,6 +94,34 @@ combined_class <- left_join(qq_response, class_data, by = c("participant_no"="pa
 
 
 
+##################### Filter the data based on the type and distribute to a new tibble ########
+
+#English Source
+
+fil_c_en_sentences <- combined_class %>% 
+  filter(Present %in% en_sentence$value)
+
+fil_c_en_mix <- combined_class %>% 
+  filter(Present %in% en_mix$value)
+
+fil_c_en_ran <- combined_class %>% 
+  filter(Present %in% en_random$value)
+
+
+#German Source
+
+fil_c_de_sentences <- combined_class %>% 
+  filter(Present %in% de_sentence$value)
+
+fil_c_de_mix <- combined_class %>% 
+  filter(Present %in% de_mix$value)
+
+fil_c_de_ran <- combined_class %>% 
+  filter(Present %in% de_random$value)
+
+
+
+
 
 
 
