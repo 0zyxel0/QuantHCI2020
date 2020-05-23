@@ -149,6 +149,32 @@ fil_c_de_ran<-  mutate(fil_c_de_ran,
 
 
 
+inlook <-class_data 
+inlook_action <- bind_rows(map(inlook[["Action"]][],as.tibble),.id = "file_source")%>%
+  set_names(c("Entry_source","Action", "Letter_no","pressed")) %>%
+  tally()
+
+
+
+Action_length <- Action_col %>%
+  mutate(,participant_no = as.numeric(as.character(Action_length$Entry_source)))
+  group_by(Entry_source) %>%
+  tally()
+
+
+  
+  
+  calculateKE<- function(transcribeCol, actionLength){
+    result <- ((nchar(transcribeCol))/(actionLength))
+    return(result)
+  }
+
+  
+  class_iki <- withTranscribe %>%
+    group_by(participant_no, Trial) %>%
+    mutate(
+      IKI = calculateIKI(TimeStamp)
+    )
 
 
 
