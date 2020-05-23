@@ -176,8 +176,9 @@ Action_length <- Action_col %>%
       IKI = calculateIKI(TimeStamp)
     )
 
-
-
-
-
-
+  class_aiki <- class_iki %>%
+    group_by(participant_no, Trial) %>%
+    filter(IKI != 0) %>%
+    mutate(
+      AIKI = calculateAIKI(IKI)
+    )

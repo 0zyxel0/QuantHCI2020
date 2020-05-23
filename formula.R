@@ -32,7 +32,10 @@ calculateIKI <- function(timestampCol){
 
 
 #----------------------AVERAGE Inter Key Interval (IKI) FORMULA---------------------------#
-
+calculateAIKI <- function(IKIcol){
+  result<-(mean(IKIcol))
+  return(result)
+}
 
 #----------------------Keyboard Efficientcy FORMULA---------------------------#
 calculateKE<- function(transcribeCol, actionLength){
