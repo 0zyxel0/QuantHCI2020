@@ -1,10 +1,10 @@
 library(tidyverse)
 library(dplyr)
 library(plotly)
+source('formula.R')
 import::from(plotly, ggplotly)
 import::from(jsonlite, fromJSON)
-import::from(assertthat, validate_that, are_equal, is.error)
-import::from(ggbeeswarm, geom_beeswarm)
+
 
 
 #Load Questionnaire
@@ -37,14 +37,6 @@ result_random <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WP
 result_sentence <- tibble(PID=integer(),Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
 result_mix <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
 
-#non_t_random <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-#non_t_sentence <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-#non_t_mix <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-
-#t_random <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-#t_sentence <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-#t_mix <- tibble(PID=integer(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-
 for (i in 1:length(file_list)){
   #join each json file with stimulus type and order by stimulus type#
   user_info <- filter(type_typist, PID == (i - 1))
@@ -55,22 +47,41 @@ for (i in 1:length(file_list)){
     user_log <- fromJSON(read_file(paste("class-logs/", file_list[i], sep = ""))) %>%
       inner_join(phrase_de)
   }
+  
+  #Calculate WPM
+  wpm <- user_log %>%
+    group_by(Stimulus_Type) %>%
+    summarise(WPM=mean(caculateWPM(Transcribed, Time)))
+  
+  mix_wpm <- wpm$WPM[1]
+  random_wpm <- wpm$WPM[2]
+  sen_wpm <- wpm$WPM[3]
+  
   #sum uer
   uer <- user_log %>% 
     group_by(Stimulus_Type) %>% 
-    summarise(UER = sum(as.numeric(UER)))
+    summarise(UER = mean(as.numeric(UER)))
     
   mix_uer <- uer$UER[1] 
   random_uer <- uer$UER[2]
   sen_uer <- uer$UER[3]
   
+  #Calculate KE
+  ke <- user_log %>%
+    group_by(Stimulus_Type) %>%
+    summarise(KE=mean(calculateKE(Transcribed, lengths(Action))))
+  
+  mix_ke <- ke$KE[1] 
+  random_ke <- ke$KE[2]
+  sen_ke <- ke$KE[3]
+  
   #add result
   result_mix <-result_mix %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=(mix_uer/50))
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=mix_uer, WPM=mix_wpm, KE=mix_ke)
   result_random <- result_random %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=(random_uer/50))
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=random_uer, WPM=random_wpm, KE=random_ke)
   result_sentence <-result_sentence %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=(sen_uer/50))
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=sen_uer, WPM=sen_wpm, KE=sen_ke)
 }
 
 #split result to touch-typist and non-touch typist
@@ -94,39 +105,69 @@ t_sentence <- result_sentence %>%
   group_by(Typist) %>%
   subset(Typist == "touch_typist")
 
-#draw UER figure
-plot_ly() %>% 
+#draw UER  Bar graph
+uer_class <- plot_ly() %>% 
   add_bars(x = ~non_t_mix$PID,
           y = ~non_t_mix$avg_UER,
-          name = "Mix Sentence of Non-touch Typists",
+          name = "Mix: Non-touch Typists",
           marker = list(color = "teal")) %>%
   add_bars(x = ~non_t_random$PID,
            y = ~non_t_random$avg_UER, 
-           opacity = 0.7,
-           name = "Random String of Non-touch Typists",
+           name = "Random: Non-touch Typists",
            marker = list(color = "#69b3a2")) %>% 
   add_bars(x = ~non_t_sentence$PID,
-           y = ~non_t_sentence$avg_UER, 
-           opacity = 0.5,
-           name = "Sentence of Non-touch Typists",
+           y = ~non_t_sentence$avg_UER,
+           name = "Sentence: Non-touch Typists",
            marker = list(color = "#006284")) %>%
   add_bars(x = ~t_mix$PID,
            y = ~t_mix$avg_UER, 
-           name = "Mix Sentence Touch Typist",
+           name = "Mix: Touch Typist",
            marker = list(color = "#AB3B3A")) %>% 
   add_bars(x = ~t_random$PID,
            y = ~t_random$avg_UER,
-           opacity = 0.8,
-           name = "Random String of Touch Typist",
+           name = "Random: Touch Typist",
            marker = list(color = "#F05E1C")) %>% 
   add_bars(x = ~t_sentence$PID,
            y = ~t_sentence$avg_UER,
-           opacity = 0.5,
-           name = "Sentence String of Touch Typist",
-           marker = list(color = "#939650")) %>% 
-  layout(barmode = "overlay",
-         title = "Uncorrected Error Rate for Non-touch Typists and Touch-Typists",
+           name = "Sentence: Touch Typist",
+           marker = list(color = "#FFC408")) %>% 
+  layout(barmode = "stack",
          xaxis = list(title = "Participants",
                       zeroline = FALSE),
          yaxis = list(title = "Uncorrected Error Rate",
                       zeroline = FALSE))
+
+#Draw WPM  Bar graph
+wpm_class <- plot_ly() %>%
+  add_bars(x = ~non_t_mix$PID,
+           y = ~non_t_mix$WPM,
+           name = "Mix: Non-touch Typists",
+           marker = list(color = "teal")) %>%
+  add_bars(x = ~non_t_random$PID,
+           y = ~non_t_random$WPM,
+           name = "Random: Non-touch Typists",
+           marker = list(color = "#69b3a2")) %>% 
+  add_bars(x = ~non_t_sentence$PID,
+           y = ~non_t_sentence$WPM, 
+           name = "Sentence: Non-touch Typists",
+           marker = list(color = "#006284")) %>%
+  add_bars(x = ~t_mix$PID,
+           y = ~t_mix$WPM, 
+           name = "Mix: Touch Typist",
+           marker = list(color = "#AB3B3A")) %>% 
+  add_bars(x = ~t_random$PID,
+           y = ~t_random$WPM,
+           name = "Random: Touch Typist",
+           marker = list(color = "#F05E1C")) %>% 
+  add_bars(x = ~t_sentence$PID,
+           y = ~t_sentence$WPM,
+           name = "Sentence:Touch Typist",
+           marker = list(color = "#FFC408")) %>% 
+  layout(barmode = "stack",
+         xaxis = list(title = "Participants",
+                      zeroline = FALSE),
+         yaxis = list(title = "Word Per Minute",
+                      zeroline = FALSE))
+#Draw KE Graph
+sub_mpg <- mpg[mpg$class %in% c("mix", "random", "sentence"),]
+ggplot(sub_mpg, aes(class, displ, color=factor(cyl))) + geom_quasirandom(dodge.width=1)
