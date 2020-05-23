@@ -24,7 +24,10 @@ calculateTER <- function(IFcol, Ccol, INFcol){
 
 
 #----------------------Inter Key Interval (IKI) FORMULA---------------------------#
-
+calculateIKI <- function(Tcol, Ccol, INFcol, IFcol, Fcol){
+  result <- ((Tcol)/(Ccol+INFcol+IFcol+Fcol))
+  return(result)
+}
 
 #----------------------AVERAGE Inter Key Interval (IKI) FORMULA---------------------------#
 
