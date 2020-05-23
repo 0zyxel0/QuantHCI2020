@@ -4,6 +4,7 @@ library(tidyverse)
 library(jsonlite)
 library(data.table)
 library(dplyr)
+source('formula.R')
 ######################Load Data from required files#############################
 
 
@@ -99,25 +100,53 @@ combined_class <- left_join(qq_response, class_data, by = c("participant_no"="pa
 #English Source
 
 fil_c_en_sentences <- combined_class %>% 
-  filter(Present %in% en_sentence$value)
+  filter(Present %in% en_sentence$value)%>%
+  select(,1,13,39:50)
+#Add WPM Formula
+fil_c_en_sentences<-  mutate(fil_c_en_sentences,wpm = (((nchar(fil_c_en_sentences$Transcribed)-1)/(fil_c_en_sentences$Time/1000))*(60/5)))
+
 
 fil_c_en_mix <- combined_class %>% 
-  filter(Present %in% en_mix$value)
+  filter(Present %in% en_mix$value) %>%
+  select(,1,13,39:50)
+#Add WPM Formula
+fil_c_en_mix<-  mutate(fil_c_en_mix,wpm = (((nchar(fil_c_en_mix$Transcribed)-1)/(fil_c_en_mix$Time/1000))*(60/5)))
+
 
 fil_c_en_ran <- combined_class %>% 
-  filter(Present %in% en_random$value)
-
+  filter(Present %in% en_random$value) %>%
+  select(,1,13,39:50)
+#Add WPM Formula
+fil_c_en_ran<-  mutate(fil_c_en_ran,wpm = (((nchar(fil_c_en_ran$Transcribed)-1)/(fil_c_en_ran$Time/1000))*(60/5)))
 
 #German Source
 
 fil_c_de_sentences <- combined_class %>% 
-  filter(Present %in% de_sentence$value)
+  filter(Present %in% de_sentence$value) %>%
+  select(,1,13,39:50)
+#Add WPM Formula
+  fil_c_de_sentences<-  mutate(fil_c_de_sentences,wpm = (((nchar(fil_c_de_sentences$Transcribed)-1)/(fil_c_de_sentences$Time/1000))*(60/5)))
 
 fil_c_de_mix <- combined_class %>% 
-  filter(Present %in% de_mix$value)
+  filter(Present %in% de_mix$value) %>%
+  select(,1,13,39:50)
+
+#Add WPM Formula
+fil_c_de_mix<-  mutate(fil_c_de_mix,wpm = (((nchar(fil_c_de_mix$Transcribed)-1)/(fil_c_de_mix$Time/1000))*(60/5)))
+
 
 fil_c_de_ran <- combined_class %>% 
-  filter(Present %in% de_random$value)
+  filter(Present %in% de_random$value) %>%
+  select(,1,13,39:50)
+
+#Add WPM Formula
+fil_c_de_ran<-  mutate(fil_c_de_ran,
+                      wpm =caculateWPM(fil_c_de_ran$Transcribed,fil_c_de_ran$Time)
+                       )
+
+
+
+
 
 
 
