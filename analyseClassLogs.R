@@ -11,9 +11,12 @@ import::from(jsonlite, fromJSON)
 df <- read.csv("Questionnaire_responses.csv",header = TRUE)
 #Select column and label user to touch typist or not ,and which language user type in.
 type_typist <- df %>%
-  select(PID, Do.you.use.the.touch.typing.systems.with.all.10.fingers., In.this.study..which.language.did.you.type.in.) %>%
-  mutate(Typist = case_when(Do.you.use.the.touch.typing.systems.with.all.10.fingers. == 'Yes' ~ 'touch_typist',
-                            Do.you.use.the.touch.typing.systems.with.all.10.fingers. == 'No' ~ 'non_touch_typist')) %>%
+  select(PID, Do.you.use.the.touch.typing.systems.with.all.10.fingers., 
+         How.many.years.of.experience.do.you.have.in.using.the.touch.typing.systems.with.all.10.fingers.,
+         In.this.study..which.language.did.you.type.in.) %>%
+  mutate(Typist = case_when((Do.you.use.the.touch.typing.systems.with.all.10.fingers. == 'Yes') &
+                            (How.many.years.of.experience.do.you.have.in.using.the.touch.typing.systems.with.all.10.fingers. > 1)  ~ 'touch_typist',
+                            TRUE ~ 'non_touch_typist')) %>%
   select(PID,Typist, In.this.study..which.language.did.you.type.in.)  
 
 #Separate phrase into 3 categories: random, sentence, mix sentence
