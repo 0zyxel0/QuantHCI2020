@@ -23,19 +23,20 @@ calculateTER <- function(IFcol, Ccol, INFcol){
 }
 
 
+
 #----------------------Inter Key Interval (IKI) FORMULA---------------------------#
-# TODO use lag to ignore time to press first keystroke
-calculateIKI <- function(Tcol, Ccol, INFcol, IFcol, Fcol){
-  result <- ((Tcol)/(Ccol+INFcol+IFcol+Fcol))
+calculateIKI <- function(timestampCol){
+  result<-((timestampCol - lag(timestampCol, n = 1L, default = 0)) * (lag(timestampCol, n = 1L, default = 0) != 0))
   return(result)
 }
+
 
 #----------------------AVERAGE Inter Key Interval (IKI) FORMULA---------------------------#
 
 
 #----------------------Keyboard Efficientcy FORMULA---------------------------#
-calculateKE<- function(Ccol, INFcol, IFcol, Fcol){
-  result <- ((Ccol+INFcol+IFcol+Fcol)/(Ccol+INFcol))
+calculateKE<- function(transcribeCol, actionLength){
+  result <- ((nchar(transcribeCol))/(actionLength))
   return(result)
 }
 
