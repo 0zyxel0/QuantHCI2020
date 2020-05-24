@@ -55,38 +55,35 @@ for (i in 1:length(file_list)){
     group_by(Stimulus_Type) %>%
     summarise(WPM=mean(caculateWPM(Transcribed, Time)))
   
-  mix_wpm <- wpm$WPM[1]
-  random_wpm <- wpm$WPM[2]
-  sen_wpm <- wpm$WPM[3]
-  
-  #sum uer
+  #Sum UER
   uer <- user_log %>% 
     group_by(Stimulus_Type) %>% 
     summarise(UER = mean(as.numeric(UER)))
-    
-  mix_uer <- uer$UER[1] 
-  random_uer <- uer$UER[2]
-  sen_uer <- uer$UER[3]
   
+  #Calculate AVG.IKI
+  avg_iki <- user_log %>%
+    unnest(Transcribe) %>%
+    mutate(IKI = calculateIKI(TimeStamp)) %>%
+    group_by(Trial, Stimulus_Type) %>%
+    summarise(AVG_iki = mean(IKI)) %>%
+    group_by(Stimulus_Type) %>%
+    summarise(AVG_IKI = mean(AVG_iki))
+
   #Calculate KE
   ke <- user_log %>%
     group_by(Stimulus_Type) %>%
     summarise(KE=mean(calculateKE(Transcribed, lengths(Action))))
   
-  mix_ke <- ke$KE[1] 
-  random_ke <- ke$KE[2]
-  sen_ke <- ke$KE[3]
-  
   #add result
   result_mix <-result_mix %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=mix_uer, 
-            WPM=mix_wpm, KE=mix_ke, Sti_Type='Mix')
+    add_row(PID = (i- 1), Typist = user_info$Typist, avg_UER = uer$UER[1], 
+            WPM = wpm$WPM[1], Avg.IKI = avg_iki$AVG_IKI[1], KE = ke$KE[2], Sti_Type='Mix')
   result_random <- result_random %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=random_uer, 
-            WPM=random_wpm, KE=random_ke, Sti_Type='Random')
+    add_row(PID = (i- 1), Typist = user_info$Typist, avg_UER = uer$UER[2], 
+            WPM = wpm$WPM[2], Avg.IKI = avg_iki$AVG_IKI[2], KE = ke$KE[2], Sti_Type='Random')
   result_sentence <-result_sentence %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=sen_uer, 
-            WPM=sen_wpm, KE=sen_ke, Sti_Type="Sentence")
+    add_row(PID = (i- 1), Typist = user_info$Typist, avg_UER = uer$UER[3], 
+            WPM = wpm$WPM[3], Avg.IKI = avg_iki$AVG_IKI[3] , KE = ke$KE[3], Sti_Type="Sentence")
 }
 
 #split result to touch-typist and non-touch typist
@@ -137,9 +134,10 @@ uer_class <- plot_ly() %>%
            name = "Sentence: Touch Typist",
            marker = list(color = "#FFC408")) %>% 
   layout(barmode = "stack",
+         title = "Uncorrected Error Rate of Non-touch Typist and Touch Typist",
          xaxis = list(title = "Participants",
                       zeroline = FALSE),
-         yaxis = list(title = "Uncorrected Error Rate",
+         yaxis = list(title = "Uncorrected Error Rate (%)",
                       zeroline = FALSE))
 
 #Draw WPM  Bar graph
@@ -169,9 +167,10 @@ wpm_class <- plot_ly() %>%
            name = "Sentence:Touch Typist",
            marker = list(color = "#FFC408")) %>% 
   layout(barmode = "stack",
+         title = "Word Per Minute of Non-touch Typist and Touch Typist",
          xaxis = list(title = "Participants",
                       zeroline = FALSE),
-         yaxis = list(title = "Word Per Minute",
+         yaxis = list(title = "Word Per Minute ()",
                       zeroline = FALSE))
 
 #Prepare KE graph data
@@ -184,7 +183,19 @@ ke_class <- plot_ly(ggplot2::diamonds, x = ~ke_graph_data$Sti_Type, y = ~ke_grap
   layout(boxmode = "group",
     title = "Keyboard Efficiency of Non-touch Typist and Touch Typist",
     xaxis = list(title='Stimulus Type'), 
-    yaxis = list(title='Keyboard Efficiency'))
+    yaxis = list(title='Keyboard Efficiency (%)'))
+
+#Prepare AVG.IKI graph data
+avg_iki_graph_data <- rbind(result_mix, result_random) %>%
+  rbind(result_sentence) %>%
+  select(Sti_Type, Avg.IKI, Typist)
+#Draw Avg.IKI boxplot
+avg_iki_class <- plot_ly(ggplot2::diamonds, x = ~avg_iki_graph_data$Sti_Type, y = ~avg_iki_graph_data$Avg.IKI, 
+                         color = ~avg_iki_graph_data$Typist, type = "box", quartilemethod="inclusive") %>%
+  layout(boxmode = "group",
+         title = "Average Inter-key interval of Non-touch Typist and Touch Typist",
+         xaxis = list(title='Stimulus Type'), 
+         yaxis = list(title='Average Inter-key interval (ms)'))
 
 
 ################# Unit of data analysis ################################
@@ -362,5 +373,6 @@ summary(a.aov)
 
 kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
 
+#
 
 
