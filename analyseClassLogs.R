@@ -2,6 +2,8 @@
 library(tidyverse)
 library(dplyr)
 library(plotly)
+library(data.table)
+library(purrr)
 source('formula.R')
 import::from(plotly, ggplotly)
 import::from(jsonlite, fromJSON)
@@ -382,29 +384,33 @@ kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
 
 ####################### PAPER DATA#####################
 
-
 all_paper <- rbindlist(sapply(all_paper_files, fread, simplify = FALSE),
                        use.names = TRUE, idcol = "FileName")
 
-all_paper_files <- list.files(path = "./paper-logs", recursive = TRUE,
+all_paper_files <- list.files(path = "paper-logs", recursive = TRUE,
                               pattern = "_log_", 
                               full.names = TRUE)
 
+pp_response <- as_tibble(read.csv("paper_responses.csv",check.names = FALSE))  
+colnames(pp_response)[1] <- "user_id"
+colnames(pp_response)[13]<- "Touchtyping_years"
+
 paper_data <- left_join(pp_response, all_paper, by=c("user_id"="user_id")) %>%
   select(1,12,13,38:52) 
-  colnames(paper_data)[2] <- "TouchTypist"
+colnames(paper_data)[2] <- "TouchTypist"
+
 
 
 paper_analysis<-paper_data %>% 
   select(user_id, TouchTypist, Touchtyping_years,ke,uer, iki, sd_iki, wpm, input_time_ms, condition) %>%
-  mutate(Typist= case_when(TouchTypist >=1 ~ "touch_typist")) %>%
-  group_by(user_id,Typist,condition) %>%
-   summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke)) 
+  mutate(Typist= case_when(Touchtyping_years >=1 ~ "touch_typist",Touchtyping_years<=1 ~ "non_touch_typist")) %>%
+  group_by(user_id,Typist) %>%
+  summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke)) 
+
 
 
 colnames(paper_analysis)[3] <- "Sti_Type"
 colnames(paper_analysis)[1] <- "PID"
-  
-  
+test<-nest(paper_analysis)
 
 
