@@ -384,12 +384,13 @@ kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
 
 ####################### PAPER DATA#####################
 
-all_paper <- rbindlist(sapply(all_paper_files, fread, simplify = FALSE),
-                       use.names = TRUE, idcol = "FileName")
-
 all_paper_files <- list.files(path = "paper-logs", recursive = TRUE,
                               pattern = "_log_", 
                               full.names = TRUE)
+all_paper <- rbindlist(sapply(all_paper_files, fread, simplify = FALSE),
+                       use.names = TRUE, idcol = "FileName")
+
+
 
 pp_response <- as_tibble(read.csv("paper_responses.csv",check.names = FALSE))  
 colnames(pp_response)[1] <- "user_id"
@@ -404,13 +405,18 @@ colnames(paper_data)[2] <- "TouchTypist"
 paper_analysis<-paper_data %>% 
   select(user_id, TouchTypist, Touchtyping_years,ke,uer, iki, sd_iki, wpm, input_time_ms, condition) %>%
   mutate(Typist= case_when(Touchtyping_years >=1 ~ "touch_typist",Touchtyping_years<=1 ~ "non_touch_typist")) %>%
-  group_by(user_id,Typist) %>%
-  summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke)) 
+  group_by(user_id,Typist,condition) %>%
+  summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke))
 
 
 
 colnames(paper_analysis)[3] <- "Sti_Type"
 colnames(paper_analysis)[1] <- "PID"
-test<-nest(paper_analysis)
 
+paper_analysis<-nest(paper_analysis, WPM=c(WPM),Typist=c(Typist),avg_UER=c(avg_UER),avg_IKI=c(avg_IKI),KE=c(KE),Sti_Type=c(Sti_Type))
 
+wilcox.test(paper_analysis[["KE"]] ~ paper_analysis[["Typist"]])
+
+kruskal.test(paper_analysis[["avg_UER"]] ~ paper_analysis[["Sti_Type"]])
+kruskal.test(paper_analysis[["KE"]] ~ paper_analysis[["Sti_Type"]])
+kruskal.test(paper_analysis[["WPM"]] ~ paper_analysis[["Sti_Type"]])
