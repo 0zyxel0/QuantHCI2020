@@ -187,5 +187,180 @@ ke_class <- plot_ly(ggplot2::diamonds, x = ~ke_graph_data$Sti_Type, y = ~ke_grap
     yaxis = list(title='Keyboard Efficiency'))
 
 
+################# Unit of data analysis ################################
+
+# RQ1: different typing performance between touch typists and non-touch typist?
+# Approch: For four metrics, explore if the performance average values differs. ANOVA (Analysis of variance) would the first option to
+#          test the equavalence of average values. But normarlity test and homogeneity test are prepositive in order to guarantee the 
+#          reliance of ANOVA. 
+
+results <- bind_rows(result_mix, result_random, result_sentence)
+
+## For Uncorrected Error Rate (UER) metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+
+ results_t <- results %>%
+  filter(Typist == "touch_typist")
+ results_non_t <- results %>%
+   filter(Typist == "non_touch_typist")
+
+
+shapiro.test(results_t[["avg_UER"]])
+shapiro.test(results_non_t[["avg_UER"]])
+
+##Here two p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["avg_UER"]], results[["Typist"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(results[["avg_UER"]] ~ results[["Typist"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Mann-Whitney U Test, H0：The two populations are equal versus
+wilcox.test(results[["avg_UER"]] ~ results[["Typist"]])
+
+
+## For Words Per Minute (WPM) metric
+
+# Normality Test for WPM metric, H0 hypothesis is that data is normally distributed. 
+
+results_t <- results %>%
+  filter(Typist == "touch_typist")
+results_non_t <- results %>%
+  filter(Typist == "non_touch_typist")
+
+
+shapiro.test(results_t[["WPM"]])
+shapiro.test(results_non_t[["WPM"]])
+
+##Here two p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["WPM"]], results[["Typist"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(results[["WPM"]] ~ results[["Typist"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Mann-Whitney U Test, H0：The two populations are equal versus
+wilcox.test(results[["WPM"]] ~ results[["Typist"]])
+
+
+## For Keyboard Efficiency metric
+
+## Normality Test
+shapiro.test(results_t[["KE"]])
+shapiro.test(results_non_t[["KE"]])
+
+##Here two p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["KE"]], results[["Typist"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(results[["KE"]] ~ results[["Typist"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Mann-Whitney U Test, H0：The two populations are equal versus
+wilcox.test(results[["KE"]] ~ results[["Typist"]])
+
+
+
+
+
+
+# RQ2: How does fimilarity of text influence the typing performance?
+
+## For Uncorrected Error Rate metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(result_sentence[["avg_UER"]])
+shapiro.test(result_mix[["avg_UER"]])
+shapiro.test(result_random[["avg_UER"]])
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["avg_UER"]], results[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(result_sentence[["avg_UER"]] ~ result_sentence[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
+
+kruskal.test(results[["avg_UER"]] ~ results[["Sti_Type"]])
+
+
+## For Words per minute (WPM) metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(result_sentence[["WPM"]])
+shapiro.test(result_mix[["WPM"]])
+shapiro.test(result_random[["WPM"]])
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["WPM"]], results[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(result_sentence[["WPM"]] ~ result_sentence[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
+
+kruskal.test(results[["WPM"]] ~ results[["Sti_Type"]])
+
   
+## For Keyboard Efficiency metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(result_sentence[["KE"]])
+shapiro.test(result_mix[["KE"]])
+shapiro.test(result_random[["KE"]])
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(results[["KE"]], results[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(result_sentence[["KE"]] ~ result_sentence[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
+
+kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
+
+
 
