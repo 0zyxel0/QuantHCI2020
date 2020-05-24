@@ -376,3 +376,35 @@ kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
 #
 
 
+
+
+
+
+####################### PAPER DATA#####################
+
+
+all_paper <- rbindlist(sapply(all_paper_files, fread, simplify = FALSE),
+                       use.names = TRUE, idcol = "FileName")
+
+all_paper_files <- list.files(path = "./paper-logs", recursive = TRUE,
+                              pattern = "_log_", 
+                              full.names = TRUE)
+
+paper_data <- left_join(pp_response, all_paper, by=c("user_id"="user_id")) %>%
+  select(1,12,13,38:52) 
+  colnames(paper_data)[2] <- "TouchTypist"
+
+
+paper_analysis<-paper_data %>% 
+  select(user_id, TouchTypist, Touchtyping_years,ke,uer, iki, sd_iki, wpm, input_time_ms, condition) %>%
+  mutate(Typist= case_when(TouchTypist >=1 ~ "touch_typist")) %>%
+  group_by(user_id,Typist,condition) %>%
+   summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke)) 
+
+
+colnames(paper_analysis)[3] <- "Sti_Type"
+colnames(paper_analysis)[1] <- "PID"
+  
+  
+
+
