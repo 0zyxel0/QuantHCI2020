@@ -1,11 +1,10 @@
+# Libraries
 library(tidyverse)
 library(dplyr)
 library(plotly)
 source('formula.R')
 import::from(plotly, ggplotly)
 import::from(jsonlite, fromJSON)
-
-
 
 #Load Questionnaire
 df <- read.csv("Questionnaire_responses.csv",header = TRUE)
@@ -35,10 +34,10 @@ phrase_en <- read.delim("Phrases/phrases_en.txt", header = FALSE, col.names = c(
 file_list <- list.files(path="class-logs")
 file_list <- file_list[1:length(file_list)-1]
 
-##results tibble
-result_random <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-result_sentence <- tibble(PID=integer(),Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
-result_mix <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric())
+#results tibble
+result_random <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric(), Sti_Type=character())
+result_sentence <- tibble(PID=integer(),Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric(), Sti_Type=character())
+result_mix <- tibble(PID=integer(), Typist=character(), avg_UER=numeric(), WPM=numeric(), Avg.IKI=numeric(), KE=numeric(), Sti_Type=character())
 
 for (i in 1:length(file_list)){
   #join each json file with stimulus type and order by stimulus type#
@@ -80,11 +79,14 @@ for (i in 1:length(file_list)){
   
   #add result
   result_mix <-result_mix %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=mix_uer, WPM=mix_wpm, KE=mix_ke)
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=mix_uer, 
+            WPM=mix_wpm, KE=mix_ke, Sti_Type='Mix')
   result_random <- result_random %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=random_uer, WPM=random_wpm, KE=random_ke)
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=random_uer, 
+            WPM=random_wpm, KE=random_ke, Sti_Type='Random')
   result_sentence <-result_sentence %>% 
-    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=sen_uer, WPM=sen_wpm, KE=sen_ke)
+    add_row(PID=(i- 1), Typist=user_info$Typist, avg_UER=sen_uer, 
+            WPM=sen_wpm, KE=sen_ke, Sti_Type="Sentence")
 }
 
 #split result to touch-typist and non-touch typist
@@ -171,6 +173,19 @@ wpm_class <- plot_ly() %>%
                       zeroline = FALSE),
          yaxis = list(title = "Word Per Minute",
                       zeroline = FALSE))
-#Draw KE Graph
-sub_mpg <- mpg[mpg$class %in% c("mix", "random", "sentence"),]
-ggplot(sub_mpg, aes(class, displ, color=factor(cyl))) + geom_quasirandom(dodge.width=1)
+
+#Prepare KE graph data
+ke_graph_data <- rbind(result_mix, result_random) %>%
+  rbind(result_sentence) %>%
+  select(Sti_Type, KE, Typist)
+#Draw KE boxplot
+ke_class <- plot_ly(ggplot2::diamonds, x = ~ke_graph_data$Sti_Type, y = ~ke_graph_data$KE, 
+                    color = ~ke_graph_data$Typist, type = "box", quartilemethod="inclusive") %>%
+  layout(boxmode = "group",
+    title = "Keyboard Efficiency of Non-touch Typist and Touch Typist",
+    xaxis = list(title='Stimulus Type'), 
+    yaxis = list(title='Keyboard Efficiency'))
+
+
+  
+
