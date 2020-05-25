@@ -415,8 +415,138 @@ colnames(paper_analysis)[1] <- "PID"
 
 paper_analysis<-nest(paper_analysis, WPM=c(WPM),Typist=c(Typist),avg_UER=c(avg_UER),avg_IKI=c(avg_IKI),KE=c(KE),Sti_Type=c(Sti_Type))
 
-wilcox.test(paper_analysis[["KE"]] ~ paper_analysis[["Typist"]])
+
+#####Filter Data from paper#########
+
+paper_analysis_mix_t <- paper_analysis %>%
+  filter(Sti_Type == "Mix" | Typist == "touch_typist")
+
+paper_analysis_random_t <- paper_analysis %>%
+  filter(Sti_Type == "Random" | Typist == "touch_typist")
+
+paper_analysis_sent_t <- paper_analysis %>%
+  filter(Sti_Type == "Sentences"| Typist == "touch_typist")
+
+paper_analysis_mix_nt <- paper_analysis %>%
+  filter(Sti_Type == "Mix" | Typist == "non_touch_typist")
+
+paper_analysis_random_nt <- paper_analysis %>%
+  filter(Sti_Type == "Random" | Typist == "non_touch_typist")
+
+paper_analysis_sent_nt <- paper_analysis %>%
+  filter(Sti_Type == "Sentences"| Typist == "non_touch_typist")
+
+
+
+
+###PLOTS####
+wpm_class <- plot_ly() %>%
+  add_bars(x = ~paper_analysis_mix_nt$PID,
+           y = ~paper_analysis_mix_nt$WPM,
+           name = "Mix: Non-touch Typists",
+           marker = list(color = "teal")) %>%
+  add_bars(x = ~paper_analysis_random_nt$PID,
+           y = ~paper_analysis_random_nt$WPM,
+           name = "Random: Non-touch Typists",
+           marker = list(color = "#69b3a2")) %>% 
+  add_bars(x = ~paper_analysis_sent_nt$PID,
+           y = ~paper_analysis_sent_nt$WPM, 
+           name = "Sentence: Non-touch Typists",
+           marker = list(color = "#006284")) %>%
+  add_bars(x = ~paper_analysis_mix_t$PID,
+           y = ~paper_analysis_mix_t$WPM, 
+           name = "Mix: Touch Typist",
+           marker = list(color = "#AB3B3A")) %>% 
+  add_bars(x = ~paper_analysis_random_t$PID,
+           y = ~paper_analysis_random_t$WPM,
+           name = "Random: Touch Typist",
+           marker = list(color = "#F05E1C")) %>% 
+  add_bars(x = ~paper_analysis_sent_t$PID,
+           y = ~paper_analysis_sent_t$WPM,
+           name = "Sentence:Touch Typist",
+           marker = list(color = "#FFC408")) %>% 
+  layout(barmode = "stack",
+         title = "Word Per Minute of Non-touch Typist and Touch Typist",
+         xaxis = list(title = "Participants",
+                      zeroline = FALSE),
+         yaxis = list(title = "Word Per Minute ()",
+                      zeroline = FALSE))
+
+
+
+
+
+## For Uncorrected Error Rate metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(paper_analysis[["avg_UER"]])
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(paper_analysis[["avg_UER"]], paper_analysis[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(paper_analysis[["avg_UER"]] ~ paper_analysis[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
 
 kruskal.test(paper_analysis[["avg_UER"]] ~ paper_analysis[["Sti_Type"]])
-kruskal.test(paper_analysis[["KE"]] ~ paper_analysis[["Sti_Type"]])
+
+
+## For Words per minute (WPM) metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(paper_analysis[["WPM"]])
+
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(paper_analysis[["WPM"]], paper_analysis[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(paper_analysis[["WPM"]] ~ paper_analysis[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
+
 kruskal.test(paper_analysis[["WPM"]] ~ paper_analysis[["Sti_Type"]])
+
+
+## For Keyboard Efficiency metric
+
+# Normality Test for UER metric, H0 hypothesis is that data is normally distributed. 
+shapiro.test(paper_analysis[["KE"]])
+
+##Here p values will be shown, if p<0.05, then H0 would be rejected, which means data does not comply normality. 
+
+
+# Homogeneity test of variance, H0 hypothsis is that The two populations have homogeneous variances
+bartlett.test(paper_analysis[["KE"]], paper_analysis[["Sti_Type"]])
+
+##If p value is smaller than 0.05, two populations' variance are not homogeneous
+
+# ANOVA, usability depending on previous tests. H0 is that two populations' mean value is equavalent 
+
+a.aov <- aov(paper_analysis[["KE"]] ~ paper_analysis[["Sti_Type"]])
+summary(a.aov)
+
+# Above analysis is ANOVA and its corresponding prepositive tests, if conditions of ANOVA are not met, then non-parameter test would be employed
+# Non-parameter test: Kruskal-Wallis Test, H0: N (three in our case) populations are equal versus
+
+kruskal.test(paper_analysis[["KE"]] ~ paper_analysis[["Sti_Type"]])
+
+
+
