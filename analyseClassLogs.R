@@ -385,7 +385,7 @@ kruskal.test(results[["KE"]] ~ results[["Sti_Type"]])
 ####################### PAPER DATA#####################
 
 all_paper_files <- list.files(path = "paper-logs", recursive = TRUE,
-                              pattern = "_log_", 
+                              pattern = "log", 
                               full.names = TRUE)
 all_paper <- rbindlist(sapply(all_paper_files, fread, simplify = FALSE),
                        use.names = TRUE, idcol = "FileName")
@@ -413,60 +413,154 @@ paper_analysis<-paper_data %>%
 colnames(paper_analysis)[3] <- "Sti_Type"
 colnames(paper_analysis)[1] <- "PID"
 
-paper_analysis<-nest(paper_analysis, WPM=c(WPM),Typist=c(Typist),avg_UER=c(avg_UER),avg_IKI=c(avg_IKI),KE=c(KE),Sti_Type=c(Sti_Type))
+numbered_paper_analysis<-paper_analysis %>%
+  rowid_to_column(var='observation')
+
+
+## Get the mean of the paper data for WPM
+mean(paper_analysis$WPM)
+
+min(paper_analysis$WPM)
+max(paper_analysis$WPM)
+mean(paper_analysis$KE)
 
 
 #####Filter Data from paper#########
 
 
-paper_analysis_mix_t <- paper_analysis %>%
+paper_analysis_mix_t <- numbered_paper_analysis %>%
   filter(Sti_Type == "Mix" & Typist == "touch_typist")
-  
-  
-paper_analysis_random_t <- paper_analysis %>%
+
+
+paper_analysis_random_t <- numbered_paper_analysis %>%
   filter(Sti_Type == "Random"& Typist == "touch_typist")
-paper_analysis_sent_t <- paper_analysis %>%
+paper_analysis_sent_t <- numbered_paper_analysis %>%
   filter(Sti_Type == "Sentences"& Typist == "touch_typist")
 
-paper_analysis_mix_nt <- paper_analysis %>%
+paper_analysis_mix_nt <- numbered_paper_analysis %>%
   filter(Sti_Type == "Mix" & Typist == "non_touch_typist")
-paper_analysis_random_nt <- paper_analysis %>%
+paper_analysis_random_nt <- numbered_paper_analysis %>%
   filter(Sti_Type == "Random" & Typist == "non_touch_typist")
-paper_analysis_sent_nt <- paper_analysis %>%
+paper_analysis_sent_nt <- numbered_paper_analysis %>%
   filter(Sti_Type == "Sentences"& Typist == "non_touch_typist")
-
-
-
 
 
 ###PLOTS####
 wpm_class <- plot_ly() %>%
-  add_bars(x = ~paper_analysis_mix_nt$PID,
+  add_bars(x = ~paper_analysis_mix_nt$observation,
            y = ~paper_analysis_mix_nt$WPM,
            name = "Mix: Non-touch Typists",
            marker = list(color = "teal")) %>%
-  add_bars(x = ~paper_analysis_random_nt$PID,
+  add_bars(x = ~paper_analysis_random_nt$observation,
            y = ~paper_analysis_random_nt$WPM,
            name = "Random: Non-touch Typists",
            marker = list(color = "#69b3a2")) %>% 
-  add_bars(x = ~paper_analysis_sent_nt$PID,
+  add_bars(x = ~paper_analysis_sent_nt$observation,
            y = ~paper_analysis_sent_nt$WPM, 
            name = "Sentence: Non-touch Typists",
            marker = list(color = "#006284")) %>%
-  add_bars(x = ~paper_analysis_mix_t$PID,
+  add_bars(x = ~paper_analysis_mix_t$observation,
            y = ~paper_analysis_mix_t$WPM, 
            name = "Mix: Touch Typist",
            marker = list(color = "#AB3B3A")) %>% 
-  add_bars(x = ~paper_analysis_random_t$PID,
+  add_bars(x = ~paper_analysis_random_t$observation,
            y = ~paper_analysis_random_t$WPM,
            name = "Random: Touch Typist",
            marker = list(color = "#F05E1C")) %>% 
-  add_bars(x = ~paper_analysis_sent_t$PID,
+  add_bars(x = ~paper_analysis_sent_t$observation,
            y = ~paper_analysis_sent_t$WPM,
            name = "Sentence:Touch Typist",
-           marker = list(color = "#FFC408"))
+           marker = list(color = "#FFC408"))%>%
+  layout(barmode = "stack",
+         title = "Word Per Minute of Non-touch Typist and Touch Typist",
+         xaxis = list(title = "Participants",
+                      zeroline = FALSE),
+         yaxis = list(title = "Word Per Minute ()",
+                      zeroline = FALSE))
+paper_analysis<-paper_data %>% 
+  select(user_id, TouchTypist, Touchtyping_years,ke,uer, iki, sd_iki, wpm, input_time_ms, condition) %>%
+  mutate(Typist= case_when(Touchtyping_years >=1 ~ "touch_typist",Touchtyping_years<=1 ~ "non_touch_typist")) %>%
+  group_by(user_id,Typist,condition) %>%
+  summarise(WPM=mean(wpm),avg_UER=mean(uer),avg_IKI=mean(iki),KE=mean(ke))
+
+
+
+colnames(paper_analysis)[3] <- "Sti_Type"
+colnames(paper_analysis)[1] <- "PID"
+
+numbered_paper_analysis<-paper_analysis %>%
+  rowid_to_column(var='observation')
+
+
+## Get the mean of the paper data for WPM
+mean(paper_analysis$WPM)
+
+min(paper_analysis$WPM)
+max(paper_analysis$WPM)
+mean(paper_analysis$KE)
+
+
+#####Filter Data from paper#########
+
+
+paper_analysis_mix_t <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Mix" & Typist == "touch_typist")
+
+
+paper_analysis_random_t <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Random"& Typist == "touch_typist")
+paper_analysis_sent_t <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Sentences"& Typist == "touch_typist")
+
+paper_analysis_mix_nt <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Mix" & Typist == "non_touch_typist")
+paper_analysis_random_nt <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Random" & Typist == "non_touch_typist")
+paper_analysis_sent_nt <- numbered_paper_analysis %>%
+  filter(Sti_Type == "Sentences"& Typist == "non_touch_typist")
+
+
+###PLOTS####
+wpm_class <- plot_ly() %>%
+  add_bars(x = ~paper_analysis_mix_nt$observation,
+           y = ~paper_analysis_mix_nt$WPM,
+           name = "Mix: Non-touch Typists",
+           marker = list(color = "teal")) %>%
+  add_bars(x = ~paper_analysis_random_nt$observation,
+           y = ~paper_analysis_random_nt$WPM,
+           name = "Random: Non-touch Typists",
+           marker = list(color = "#69b3a2")) %>% 
+  add_bars(x = ~paper_analysis_sent_nt$observation,
+           y = ~paper_analysis_sent_nt$WPM, 
+           name = "Sentence: Non-touch Typists",
+           marker = list(color = "#006284")) %>%
+  add_bars(x = ~paper_analysis_mix_t$observation,
+           y = ~paper_analysis_mix_t$WPM, 
+           name = "Mix: Touch Typist",
+           marker = list(color = "#AB3B3A")) %>% 
+  add_bars(x = ~paper_analysis_random_t$observation,
+           y = ~paper_analysis_random_t$WPM,
+           name = "Random: Touch Typist",
+           marker = list(color = "#F05E1C")) %>% 
+  add_bars(x = ~paper_analysis_sent_t$observation,
+           y = ~paper_analysis_sent_t$WPM,
+           name = "Sentence:Touch Typist",
+           marker = list(color = "#FFC408"))%>%
+  layout(barmode = "stack",
+         title = "Word Per Minute of Non-touch Typist and Touch Typist",
+         xaxis = list(title = "Participants",
+                      zeroline = FALSE),
+         yaxis = list(title = "Word Per Minute ()",
+                      zeroline = FALSE))
 wpm_class
 
+#Draw KE boxplot
+ke_paper <- plot_ly(ggplot2::diamonds, x = ~paper_analysis$Sti_Type, y = ~paper_analysis$KE, 
+                    color = ~paper_analysis$Typist, type = "box", quartilemethod="inclusive") %>%
+  layout(boxmode = "group",
+         title = "Keyboard Efficiency of Non-touch Typist and Touch Typist",
+         xaxis = list(title='Stimulus Type'), 
+         yaxis = list(title='Keyboard Efficiency (%)'))
 
 ## For Uncorrected Error Rate metric
 
