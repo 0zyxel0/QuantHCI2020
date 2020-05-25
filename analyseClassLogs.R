@@ -418,23 +418,21 @@ paper_analysis<-nest(paper_analysis, WPM=c(WPM),Typist=c(Typist),avg_UER=c(avg_U
 
 #####Filter Data from paper#########
 
+
 paper_analysis_mix_t <- paper_analysis %>%
-  filter(Sti_Type == "Mix" | Typist == "touch_typist")
-
+  filter(Sti_Type == "Mix" & Typist == "touch_typist")%>%
 paper_analysis_random_t <- paper_analysis %>%
-  filter(Sti_Type == "Random" | Typist == "touch_typist")
-
+  filter(Sti_Type == "Random"& Typist == "touch_typist")
 paper_analysis_sent_t <- paper_analysis %>%
-  filter(Sti_Type == "Sentences"| Typist == "touch_typist")
+  filter(Sti_Type == "Sentences"& Typist == "touch_typist")
 
 paper_analysis_mix_nt <- paper_analysis %>%
-  filter(Sti_Type == "Mix" | Typist == "non_touch_typist")
-
+  filter(Sti_Type == "Mix" & Typist == "non_touch_typist")
 paper_analysis_random_nt <- paper_analysis %>%
-  filter(Sti_Type == "Random" | Typist == "non_touch_typist")
-
+  filter(Sti_Type == "Random" & Typist == "non_touch_typist")
 paper_analysis_sent_nt <- paper_analysis %>%
-  filter(Sti_Type == "Sentences"| Typist == "non_touch_typist")
+  filter(Sti_Type == "Sentences"& Typist == "non_touch_typist")
+
 
 
 
@@ -464,16 +462,8 @@ wpm_class <- plot_ly() %>%
   add_bars(x = ~paper_analysis_sent_t$PID,
            y = ~paper_analysis_sent_t$WPM,
            name = "Sentence:Touch Typist",
-           marker = list(color = "#FFC408")) %>% 
-  layout(barmode = "stack",
-         title = "Word Per Minute of Non-touch Typist and Touch Typist",
-         xaxis = list(title = "Participants",
-                      zeroline = FALSE),
-         yaxis = list(title = "Word Per Minute ()",
-                      zeroline = FALSE))
-
-
-
+           marker = list(color = "#FFC408"))
+wpm_class
 
 
 ## For Uncorrected Error Rate metric
