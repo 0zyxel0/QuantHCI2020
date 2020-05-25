@@ -420,7 +420,9 @@ paper_analysis<-nest(paper_analysis, WPM=c(WPM),Typist=c(Typist),avg_UER=c(avg_U
 
 
 paper_analysis_mix_t <- paper_analysis %>%
-  filter(Sti_Type == "Mix" & Typist == "touch_typist")%>%
+  filter(Sti_Type == "Mix" & Typist == "touch_typist")
+  
+  
 paper_analysis_random_t <- paper_analysis %>%
   filter(Sti_Type == "Random"& Typist == "touch_typist")
 paper_analysis_sent_t <- paper_analysis %>%
